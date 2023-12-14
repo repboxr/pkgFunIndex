@@ -1,0 +1,126 @@
+---
+output: 
+  html_document: 
+    df_print: kable
+---
+```{r "setup", include=FALSE}
+library(dplyr)
+library(pkgFunIndex)
+work_dir = "C:/libraries/pkgFunIndex/work"
+hist_df = readRDS(file.path(work_dir,"exp_fun_hist.Rds"))
+cran_df = readRDS(file.path(work_dir,"cran.toc.rds")) %>%
+  rename(pkg = Package, version = Version, date=Published) %>%
+  semi_join(hist_df, by=c("pkg"))
+
+hist_df = add_hist_fun_change_extra_cols(hist_df, cran_df)
+
+```
+
+
+# Overview of packages
+
+```{r}
+# Number of packages
+n_distinct(cran_df$pkg)
+
+# Average number of package versions
+NROW(cran_df$pkg)
+```
+
+
+# Number of pkg versions 
+```{r}
+pkg_df = cran_df %>%
+  group_by(pkg) %>%
+  summarize(num_version = n()) %>%
+  mutate(num_version = ifelse(num_version>=50,50, num_version))
+
+
+hist(pkg_df$num_version,breaks=seq(-0.5,max(pkg_df$num_version)+0.5, by=1),xlim = c(0,50),main = "Distribution of number of package versions.", xlab="", ylab="")
+```
+
+
+
+# Overview of function updates
+
+## Share of function versions that are changed in a certain way
+```{r}
+any.cols = c("args_changed","args_just_added", "breaking_change", "fun_is_added","fun_will_be_removed","fun_will_be_temporarily_removed")
+all.cols = c("fun_is_fine")
+cols = c(any.cols, all.cols)
+hist_df %>%
+  filter(version_num > 1) %>%
+  summarize(
+    across(all_of(cols),~mean(., na.rm=TRUE))
+  ) %>%
+  tidyr::pivot_longer(everything(), names_to ="measure", values_to = "share") %>%
+  mutate(share = round(share*100,1))
+```
+
+## Share of functions that have some of the changes mentioned above
+
+```{r}
+hist_df %>%
+  filter(version_num > 1) %>%
+  group_by(pkg, fun) %>%
+  summarize(
+    across(all_of(any.cols),~any(., na.rm=TRUE)),
+    across(all_of(all.cols),~any(., na.rm=TRUE))
+  ) %>%
+  ungroup() %>%
+  summarize(
+    across(all_of(cols),~mean(., na.rm=TRUE))
+  ) %>%
+  tidyr::pivot_longer(everything(), names_to ="measure", values_to = "share") %>%
+  mutate(share = round(share*100,1))
+```
+
+
+## Share of package versions that have some of the changes mentioned above
+
+```{r}
+hist_df %>%
+  filter(version_num > 1) %>%
+  group_by(pkg, version) %>%
+  summarize(
+    across(all_of(any.cols),~any(., na.rm=TRUE)),
+    across(all_of(all.cols),~any(., na.rm=TRUE))
+  ) %>%
+  ungroup() %>%
+  summarize(
+    across(all_of(cols),~mean(., na.rm=TRUE))
+  ) %>%
+  tidyr::pivot_longer(everything(), names_to ="measure", values_to = "share") %>%
+  mutate(share = round(share*100,1))
+```
+
+## Share of packages that have some of the changes mentioned above
+
+```{r}
+hist_df %>%
+  filter(version_num > 1) %>%
+  group_by(pkg) %>%
+  summarize(
+    across(all_of(any.cols),~any(., na.rm=TRUE)),
+    across(all_of(all.cols),~any(., na.rm=TRUE))
+  ) %>%
+  ungroup() %>%
+  summarize(
+    across(cols,~mean(., na.rm=TRUE))
+  ) %>%
+  tidyr::pivot_longer(everything(), names_to ="measure", values_to = "share") %>%
+  mutate(share = round(share*100,1))
+```
+
+
+## Function names with breaking changes
+
+```{r}
+# Functions with breaking changes
+breaking_change_df = filter(hist_df, breaking_change) %>%
+  select(pkg, fun, args_str, prev_args_str)
+NROW(breaking_change_df)
+head(breaking_change_df, 20)
+```
+
+

@@ -1,0 +1,11 @@
+Package: pkgFunIndex
+Type: Package
+Title: Extract information about functions in R packages.
+Version: 0.1.0
+Author: Sebastian Kranz
+Maintainer: Sebastian Kranz <sebastian.kranz@uni-ulm.de>
+Description: Will be used to build a systematic database of exported functions of all versions of CRAN packages.
+License: GPL >= 3.0
+Depends: archive, sourcemodify, stringtools, restorepoint, stringi
+Encoding: UTF-8
+LazyData: true
