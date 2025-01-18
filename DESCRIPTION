@@ -7,6 +7,6 @@ Maintainer: Sebastian Kranz <sebastian.kranz@uni-ulm.de>
 Description: Will be used to build a systematic database of exported functions of all versions of CRAN packages.
 License: GPL >= 3.0
 Remotes: skranz/stringtools
-Depends: archive, sourcemodify, stringtools, restorepoint, stringi
+Depends: sourcemodify, stringtools, restorepoint, stringi
 Encoding: UTF-8
 LazyData: true
